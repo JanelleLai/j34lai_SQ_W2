@@ -3,40 +3,72 @@ function preload() {
   character = loadImage("assets/images/AdobeStock_491984896.png"); // Load character image
 }
 
+// ------------------------------------------------------------
+// PLATFORMS ARRAY
+// Each platform is an object with x, y, width, and height.
+// ------------------------------------------------------------
+let platforms = [
+  { x: 0, y: 410, w: 800, h: 40 }, // ground (full width floor)
+  { x: 80, y: 310, w: 120, h: 16 }, // left low platform
+  { x: 280, y: 240, w: 140, h: 16 }, // centre platform
+  { x: 500, y: 170, w: 120, h: 16 }, // right high platform
+  { x: 160, y: 150, w: 100, h: 16 }, // left high platform
+  { x: 360, y: 320, w: 110, h: 16 }, // centre low platform
+  { x: 620, y: 290, w: 130, h: 16 }, // far right platform
+];
+
+// ------------------------------------------------------------
+// PLAYER OBJECT
+// ------------------------------------------------------------
 let player = {
-  x: 200, // horizontal position (center of character)
-  y: 100, // vertical position (center of character)
+  x: 100,
+  y: 100,
   vx: 0, // horizontal velocity
   vy: 0, // vertical velocity
-  r: 24, // radius of the character
-  speed: 0.5, // horizontal acceleration per frame
-  maxSpeed: 4, // maximum horizontal speed
+  r: 20, // visual radius for collision
+  speed: 0.55, // horizontal acceleration per frame
+  maxSpeed: 4.5, // maximum horizontal speed
   jumpForce: -12, // upward velocity applied when jumping
-  friction: 0.8, // horizontal slowdown when no key is pressed
+  friction: 0.78, // horizontal slowdown when no key is pressed
   onGround: false, // tracks whether the player is standing on something
 };
 
+// ------------------------------------------------------------
+// PHYSICS CONSTANTS
+// ------------------------------------------------------------
 const GRAVITY = 0.6; // downward force added to vy every frame
-let floorY;
+const PLATFORM_COLOR = [255, 160, 50]; // warm orange
 
+// ============================================================
+// setup()
+// Runs once at the very start of the sketch.
+// ============================================================
 function setup() {
   createCanvas(800, 450);
-  floorY = height - 40; // ground sits 40px from the bottom
-  player.y = floorY - player.r; // start the player sitting on the floor
+  player.y = platforms[0].y - player.r; // Place player on top of the ground platform
 }
 
+// ============================================================
+// draw()
+// Runs repeatedly in a loop after setup() finishes.
+// ============================================================
 function draw() {
   background(bgimg); // Use your background image
 
-  drawFloor();
   handleInput();
   applyPhysics();
+  resolvePlatformCollisions();
+
+  drawPlatforms();
   drawPlayer();
   drawHUD();
 }
 
+// ------------------------------------------------------------
+// handleInput()
+// Handles player movement and jumping.
+// ------------------------------------------------------------
 function handleInput() {
-  // --- Horizontal movement ---
   if (keyIsDown(LEFT_ARROW) || keyIsDown(65)) {
     // LEFT or A
     player.vx -= player.speed;
@@ -46,10 +78,8 @@ function handleInput() {
     player.vx += player.speed;
   }
 
-  // --- Clamp horizontal speed ---
   player.vx = constrain(player.vx, -player.maxSpeed, player.maxSpeed);
 
-  // --- Apply friction when no horizontal key is pressed ---
   if (
     !keyIsDown(LEFT_ARROW) &&
     !keyIsDown(65) &&
@@ -59,7 +89,6 @@ function handleInput() {
     player.vx *= player.friction;
   }
 
-  // --- Jump ---
   if ((keyIsDown(UP_ARROW) || keyIsDown(87)) && player.onGround) {
     // UP or W
     player.vy = player.jumpForce;
@@ -67,29 +96,74 @@ function handleInput() {
   }
 }
 
+// ------------------------------------------------------------
+// applyPhysics()
+// Applies gravity and updates player position.
+// ------------------------------------------------------------
 function applyPhysics() {
-  // 1. Apply gravity
   player.vy += GRAVITY;
-
-  // 2. Move player by its current velocity
   player.x += player.vx;
   player.y += player.vy;
 
-  // 3. Floor collision
-  if (player.y + player.r >= floorY) {
-    player.y = floorY - player.r; // snap to floor
-    player.vy = 0; // stop falling
-    player.onGround = true; // allow jumping again
-  } else {
-    player.onGround = false;
+  player.x = constrain(player.x, player.r, width - player.r);
+
+  if (player.y > height + 100) {
+    player.x = 100;
+    player.y = platforms[0].y - player.r;
+    player.vx = 0;
+    player.vy = 0;
   }
 
-  // 4. Wall collision — keep player inside canvas
-  player.x = constrain(player.x, player.r, width - player.r);
+  player.onGround = false;
 }
 
+// ------------------------------------------------------------
+// resolvePlatformCollisions()
+// Checks for collisions between the player and platforms.
+// ------------------------------------------------------------
+function resolvePlatformCollisions() {
+  for (let i = 0; i < platforms.length; i++) {
+    let p = platforms[i];
+
+    let playerLeft = player.x - player.r;
+    let playerRight = player.x + player.r;
+    let playerBottom = player.y + player.r;
+
+    let platLeft = p.x;
+    let platRight = p.x + p.w;
+    let platTop = p.y;
+
+    let overlapsHorizontally = playerRight > platLeft && playerLeft < platRight;
+    let landingOnTop =
+      player.vy >= 0 && playerBottom >= platTop && playerBottom <= platTop + 20;
+
+    if (overlapsHorizontally && landingOnTop) {
+      player.y = platTop - player.r;
+      player.vy = 0;
+      player.onGround = true;
+    }
+  }
+}
+
+// ------------------------------------------------------------
+// drawPlatforms()
+// Draws all platforms.
+// ------------------------------------------------------------
+function drawPlatforms() {
+  fill(PLATFORM_COLOR[0], PLATFORM_COLOR[1], PLATFORM_COLOR[2]);
+  noStroke();
+
+  for (let i = 0; i < platforms.length; i++) {
+    let p = platforms[i];
+    rect(p.x, p.y, p.w, p.h, 6); // rounded corners
+  }
+}
+
+// ------------------------------------------------------------
+// drawPlayer()
+// Draws the player using the character image.
+// ------------------------------------------------------------
 function drawPlayer() {
-  // Draw the player using the character image
   image(
     character,
     player.x - player.r, // Center the image horizontally
@@ -99,12 +173,10 @@ function drawPlayer() {
   );
 }
 
-function drawFloor() {
-  fill(40, 120, 110); // dark teal
-  noStroke();
-  rect(0, floorY, width, height - floorY);
-}
-
+// ------------------------------------------------------------
+// drawHUD()
+// Displays instructions for the player.
+// ------------------------------------------------------------
 function drawHUD() {
   fill(180);
   noStroke();
