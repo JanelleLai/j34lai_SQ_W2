@@ -28,7 +28,7 @@ function setup() {
 }
 
 function draw() {
-  background(character);
+  background(bgimg);
 
   drawFloor();
   handleInput(); //handles player movement based on key presses
@@ -36,6 +36,8 @@ function draw() {
   drawPlayer();
   drawBlocks();
   drawHUD(); //displays indtructions for player
+
+  console.log("Player position:", player.x, player.y);
 }
 
 function handleInput() {
