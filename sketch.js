@@ -8,13 +8,13 @@ function preload() {
 // Each platform is an object with x, y, width, height, and velocity.
 // ------------------------------------------------------------
 let platforms = [
-  { x: 0, y: 410, w: 800, h: 40, vx: 0 }, // ground (doesn't move)
-  { x: 80, y: 310, w: 120, h: 16, vx: 2 }, // left low platform
-  { x: 280, y: 240, w: 140, h: 16, vx: -2 }, // centre platform
-  { x: 500, y: 170, w: 120, h: 16, vx: 1.5 }, // right high platform
-  { x: 160, y: 150, w: 100, h: 16, vx: -1.5 }, // left high platform
-  { x: 360, y: 320, w: 110, h: 16, vx: 2 }, // centre low platform
-  { x: 620, y: 290, w: 130, h: 16, vx: -2 }, // far right platform
+  { x: 0, y: 410, w: 800, h: 40, vx: 0, active: false, moved: 0 }, // ground (doesn't move)
+  { x: 80, y: 310, w: 120, h: 16, vx: 1, active: false, moved: 0 }, // left low platform
+  { x: 280, y: 240, w: 140, h: 16, vx: -1, active: false, moved: 0 }, // centre platform
+  { x: 500, y: 170, w: 120, h: 16, vx: 0.8, active: false, moved: 0 }, // right high platform
+  { x: 160, y: 150, w: 100, h: 16, vx: -0.8, active: false, moved: 0 }, // left high platform
+  { x: 360, y: 320, w: 110, h: 16, vx: 1, active: false, moved: 0 }, // centre low platform
+  { x: 620, y: 290, w: 130, h: 16, vx: -1, active: false, moved: 0 }, // far right platform
 ];
 
 // ------------------------------------------------------------
@@ -38,6 +38,7 @@ let player = {
 // ------------------------------------------------------------
 const GRAVITY = 0.6; // downward force added to vy every frame
 const PLATFORM_COLOR = [255, 160, 50]; // warm orange
+const MAX_MOVE_DISTANCE = 30; // Maximum distance a platform can move
 
 // ============================================================
 // setup()
@@ -120,7 +121,7 @@ function applyPhysics() {
 
 // ------------------------------------------------------------
 // movePlatforms()
-// Updates the position of moving platforms.
+// Updates the position of moving platforms only if the player is on them.
 // ------------------------------------------------------------
 function movePlatforms() {
   for (let i = 1; i < platforms.length; i++) {
