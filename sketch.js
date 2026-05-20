@@ -126,11 +126,14 @@ function movePlatforms() {
   for (let i = 1; i < platforms.length; i++) {
     // Skip the ground (index 0)
     let p = platforms[i];
-    p.x += p.vx;
 
-    // Reverse direction if the platform hits the edge of the canvas
-    if (p.x <= 0 || p.x + p.w >= width) {
-      p.vx *= -1;
+    if (p.active) {
+      p.x += p.vx;
+
+      // Reverse direction if the platform hits the edge of the canvas
+      if (p.x <= 0 || p.x + p.w >= width) {
+        p.vx *= -1;
+      }
     }
   }
 }
@@ -162,6 +165,12 @@ function resolvePlatformCollisions() {
 
       // Move the player along with the platform
       player.x += p.vx;
+
+      // Activate the platform to make it move
+      p.active = true;
+    } else {
+      // Deactivate the platform if the player is not on it
+      p.active = false;
     }
   }
 }
