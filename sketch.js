@@ -28,7 +28,7 @@ function setup() {
 }
 
 function draw() {
-  background(bgimg);
+  background(character);
 
   drawFloor();
   handleInput(); //handles player movement based on key presses
