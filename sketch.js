@@ -18,7 +18,7 @@ let player = {
 let blocks = [];
 
 function setup() {
-  createCanvas(500, 400);
+  createCanvas(800, 450);
   floorY = height - 40;
   player.y = floorY - player.r;
 
