@@ -1,55 +1,55 @@
 function preload() {
-  bgimg = loadImage("assets/images/AdobeStock_296211293.jpeg");
-  character = loadImage("assets/images/AdobeStock_491984896.png");
+  bgimg = loadImage("assets/images/AdobeStock_296211293.jpeg"); // Load background image
+  character = loadImage("assets/images/AdobeStock_491984896.png"); // Load character image
 }
 
 let player = {
-  x: 200,
-  y: 100,
-  vx: 0,
-  vy: 0,
-  r: 24,
-  speed: 0.5,
-  maxSpeed: 4,
-  friction: 0.8,
-  onGround: false,
+  x: 200, // horizontal position (center of character)
+  y: 100, // vertical position (center of character)
+  vx: 0, // horizontal velocity
+  vy: 0, // vertical velocity
+  r: 24, // radius of the character
+  speed: 0.5, // horizontal acceleration per frame
+  maxSpeed: 4, // maximum horizontal speed
+  jumpForce: -12, // upward velocity applied when jumping
+  friction: 0.8, // horizontal slowdown when no key is pressed
+  onGround: false, // tracks whether the player is standing on something
 };
 
-let blocks = [];
+const GRAVITY = 0.6; // downward force added to vy every frame
+let floorY;
 
 function setup() {
   createCanvas(800, 450);
-  floorY = height - 40;
-  player.y = floorY - player.r;
-
-  // create blocks
-  blocks.push({ x: 150, y: height + 20, w: 100, h: 20, vy: 0, active: false });
-  blocks.push({ x: 300, y: floorY - 60, w: 100, h: 20, vy: 0, active: false });
+  floorY = height - 40; // ground sits 40px from the bottom
+  player.y = floorY - player.r; // start the player sitting on the floor
 }
 
 function draw() {
-  background(bgimg);
+  background(bgimg); // Use your background image
 
   drawFloor();
-  handleInput(); //handles player movement based on key presses
-  applyPhysics(); //applies gravity
+  handleInput();
+  applyPhysics();
   drawPlayer();
-  drawBlocks();
-  drawHUD(); //displays indtructions for player
-
-  console.log("Player position:", player.x, player.y);
+  drawHUD();
 }
 
 function handleInput() {
+  // --- Horizontal movement ---
   if (keyIsDown(LEFT_ARROW) || keyIsDown(65)) {
+    // LEFT or A
     player.vx -= player.speed;
   }
   if (keyIsDown(RIGHT_ARROW) || keyIsDown(68)) {
+    // RIGHT or D
     player.vx += player.speed;
   }
 
+  // --- Clamp horizontal speed ---
   player.vx = constrain(player.vx, -player.maxSpeed, player.maxSpeed);
 
+  // --- Apply friction when no horizontal key is pressed ---
   if (
     !keyIsDown(LEFT_ARROW) &&
     !keyIsDown(65) &&
@@ -58,72 +58,49 @@ function handleInput() {
   ) {
     player.vx *= player.friction;
   }
+
+  // --- Jump ---
+  if ((keyIsDown(UP_ARROW) || keyIsDown(87)) && player.onGround) {
+    // UP or W
+    player.vy = player.jumpForce;
+    player.onGround = false;
+  }
 }
 
 function applyPhysics() {
+  // 1. Apply gravity
   player.vy += GRAVITY;
+
+  // 2. Move player by its current velocity
   player.x += player.vx;
   player.y += player.vy;
 
+  // 3. Floor collision
   if (player.y + player.r >= floorY) {
-    player.y = floorY - player.r;
-    player.vy = 0;
-    player.onGround = true;
+    player.y = floorY - player.r; // snap to floor
+    player.vy = 0; // stop falling
+    player.onGround = true; // allow jumping again
   } else {
     player.onGround = false;
   }
 
+  // 4. Wall collision — keep player inside canvas
   player.x = constrain(player.x, player.r, width - player.r);
-
-  blocks.forEach((block) => {
-    if (
-      player.x + player.r > block.x &&
-      player.x - player.r < block.x + block.w &&
-      player.y + player.r >= block.y &&
-      player.y + player.r <= block.y + block.h
-    ) {
-      player.y = block.y - player.r;
-      player.vy = block.vy;
-      player.onGround = true;
-
-      if (!block.active) {
-        block.active = true;
-        block.vy = -8; // Block bounces up
-      }
-    }
-
-    if (block.active) {
-      block.vy += GRAVITY;
-      block.y += block.vy;
-
-      if (block.y >= floorY - block.h) {
-        block.y = floorY - block.h;
-        block.vy = 0;
-        block.active = false;
-      }
-    }
-  });
 }
 
 function drawPlayer() {
+  // Draw the player using the character image
   image(
     character,
-    player.x - player.r,
-    player.y - player.r,
-    player.r * 2,
-    player.r * 2
+    player.x - player.r, // Center the image horizontally
+    player.y - player.r, // Center the image vertically
+    player.r * 2, // Width of the character image
+    player.r * 2 // Height of the character image
   );
 }
 
-function drawBlocks() {
-  fill(200, 100, 50); // Block color
-  blocks.forEach((block) => {
-    rect(block.x, block.y, block.w, block.h);
-  });
-}
-
 function drawFloor() {
-  fill(40, 120, 110);
+  fill(40, 120, 110); // dark teal
   noStroke();
   rect(0, floorY, width, height - floorY);
 }
@@ -133,5 +110,5 @@ function drawHUD() {
   noStroke();
   textSize(13);
   textAlign(LEFT);
-  text("Move: Arrow Keys or WASD", 16, 24);
+  text("Move: Arrow Keys or WASD   Jump: W or Up Arrow", 16, 24);
 }
