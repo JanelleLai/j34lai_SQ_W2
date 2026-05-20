@@ -5,16 +5,16 @@ function preload() {
 
 // ------------------------------------------------------------
 // PLATFORMS ARRAY
-// Each platform is an object with x, y, width, and height.
+// Each platform is an object with x, y, width, height, and velocity.
 // ------------------------------------------------------------
 let platforms = [
-  { x: 0, y: 410, w: 800, h: 40 }, // ground (full width floor)
-  { x: 80, y: 310, w: 120, h: 16 }, // left low platform
-  { x: 280, y: 240, w: 140, h: 16 }, // centre platform
-  { x: 500, y: 170, w: 120, h: 16 }, // right high platform
-  { x: 160, y: 150, w: 100, h: 16 }, // left high platform
-  { x: 360, y: 320, w: 110, h: 16 }, // centre low platform
-  { x: 620, y: 290, w: 130, h: 16 }, // far right platform
+  { x: 0, y: 410, w: 800, h: 40, vx: 0 }, // ground (doesn't move)
+  { x: 80, y: 310, w: 120, h: 16, vx: 2 }, // left low platform
+  { x: 280, y: 240, w: 140, h: 16, vx: -2 }, // centre platform
+  { x: 500, y: 170, w: 120, h: 16, vx: 1.5 }, // right high platform
+  { x: 160, y: 150, w: 100, h: 16, vx: -1.5 }, // left high platform
+  { x: 360, y: 320, w: 110, h: 16, vx: 2 }, // centre low platform
+  { x: 620, y: 290, w: 130, h: 16, vx: -2 }, // far right platform
 ];
 
 // ------------------------------------------------------------
@@ -57,6 +57,7 @@ function draw() {
 
   handleInput();
   applyPhysics();
+  movePlatforms(); // Move platforms left and right
   resolvePlatformCollisions();
 
   drawPlatforms();
@@ -118,6 +119,23 @@ function applyPhysics() {
 }
 
 // ------------------------------------------------------------
+// movePlatforms()
+// Updates the position of moving platforms.
+// ------------------------------------------------------------
+function movePlatforms() {
+  for (let i = 1; i < platforms.length; i++) {
+    // Skip the ground (index 0)
+    let p = platforms[i];
+    p.x += p.vx;
+
+    // Reverse direction if the platform hits the edge of the canvas
+    if (p.x <= 0 || p.x + p.w >= width) {
+      p.vx *= -1;
+    }
+  }
+}
+
+// ------------------------------------------------------------
 // resolvePlatformCollisions()
 // Checks for collisions between the player and platforms.
 // ------------------------------------------------------------
@@ -141,6 +159,9 @@ function resolvePlatformCollisions() {
       player.y = platTop - player.r;
       player.vy = 0;
       player.onGround = true;
+
+      // Move the player along with the platform
+      player.x += p.vx;
     }
   }
 }
