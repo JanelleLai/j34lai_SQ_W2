@@ -128,17 +128,14 @@ function movePlatforms() {
     // Skip the ground (index 0)
     let p = platforms[i];
 
-    if (p.active && Math.abs(p.moved) < MAX_MOVE_DISTANCE) {
+    if (p.active) {
       p.x += p.vx;
       p.moved += p.vx; // Track how far the platform has moved
 
-      // Reverse direction if the platform hits the edge of the canvas
-      if (p.x <= 0 || p.x + p.w >= width) {
+      // Reverse direction if the platform reaches its maximum movement range
+      if (Math.abs(p.moved) >= MAX_MOVE_DISTANCE) {
         p.vx *= -1;
       }
-    } else if (Math.abs(p.moved) >= MAX_MOVE_DISTANCE) {
-      // Stop the platform after it moves the maximum distance
-      p.active = false;
     }
   }
 }
